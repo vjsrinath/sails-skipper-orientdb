@@ -24,6 +24,7 @@
   "dependencies": {
     "async": "^1.0.0",
     "concat-stream": "^1.4.8",
-    "lodash": "^3.9.2"
+    "lodash": "^3.9.2",
+    "node-java": "^1.0.1"
   }
 }
