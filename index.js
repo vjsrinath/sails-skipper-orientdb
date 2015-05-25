@@ -201,17 +201,19 @@ module.exports = function OrientDBStore(globalOpts) {
                 files().create({
                     filename: fd,
                     contentType: 'binary/octet-stream',
-                    length: __newFile.length,
+                    length: __newFile.byteCount,
                     chunkSize: options.maxChunkSize,
                     metadata: {
                         fd: fd,
                         dirname: __newFile.dirname || path.dirname(fd)
                     }
                 }).exec(function (err, file) {
-                    if (err)
+                    if (err) {
                         receiver__.emit('error', err);
+                        return;
+                    }
                     var totalBytesRead = 0;
-                    var chunks = __newFile.length / options.maxChunkSize;
+                    var chunks = __newFile.byteCount / options.maxChunkSize;
 
                     var index = 0, chunkRegistry = [];
                     while (index < chunks) {
