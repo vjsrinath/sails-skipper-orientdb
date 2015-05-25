@@ -31,10 +31,10 @@ module.exports = function OrientDBStore(globalOpts) {
     //var getConnection = _connectionBuilder(globalOpts);
 
     var files = function () {
-            return globals[globalOpts.filesCollection];
+            return globalOpts.filesCollection;
         },
         filesChunks = function () {
-            return globals[globalOpts.filesChunksCollection];
+            return globalOpts.filesChunksCollection;
         };
 
     var adapter = {
