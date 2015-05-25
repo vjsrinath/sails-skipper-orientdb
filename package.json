@@ -20,5 +20,10 @@
   "bugs": {
     "url": "https://github.com/vjsrinath/sails-skipper-orientdb/issues"
   },
-  "homepage": "https://github.com/vjsrinath/sails-skipper-orientdb#readme"
+  "homepage": "https://github.com/vjsrinath/sails-skipper-orientdb#readme",
+  "dependencies": {
+    "async": "^1.0.0",
+    "concat-stream": "^1.4.8",
+    "lodash": "^3.9.2"
+  }
 }
