@@ -230,7 +230,7 @@ module.exports = function OrientDBStore(globalOpts) {
                             files_id: file.id,
                             data: chunkData,
                             n: current.index
-                        }).exec(function (err1, fileChunk) {
+                        }).then(function (err1, fileChunk) {
                             next(err1);
                         });
 
