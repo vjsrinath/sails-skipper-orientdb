@@ -39,6 +39,8 @@ module.exports = function OrientDBStore(globalOpts) {
             return globalOpts.filesChunksCollection;
         };
 
+    var slPromise = files().getDB().cluster.create(globalOpts.filesChunksClusterName);
+
     var adapter = {
         ls: function (dirname, cb) {
 
@@ -200,45 +202,47 @@ module.exports = function OrientDBStore(globalOpts) {
                 });
 
                 var bytesCount = parseInt(__newFile.byteCount);
-                files().create({
-                    filename: fd,
-                    contentType: 'binary/octet-stream',
-                    length: bytesCount,
-                    chunkSize: options.maxChunkSize,
-                    metadata: {
-                        fd: fd,
-                        dirname: __newFile.dirname || path.dirname(fd)
-                    }
-                }).exec(function (err, file) {
-                    if (err) {
-                        receiver__.emit('error', err);
-                        return;
-                    }
-                    var totalBytesRead = 0;
-                    var chunks = bytesCount / options.maxChunkSize;
 
-                    var index = 0, chunkRegistry = [];
-                    while (index < chunks) {
-                        chunkRegistry.push({starts: (index * options.maxChunkSize), index: index});
-                        index++;
-                    }
-                    async.eachSeries(chunkRegistry, function (current, next) {
-                        var chunkData = __newFile.read(options.maxChunkSize);
+                slPromise.then(function () {
+                    files().create({
+                        filename: fd,
+                        contentType: 'binary/octet-stream',
+                        length: bytesCount,
+                        chunkSize: options.maxChunkSize,
+                        metadata: {
+                            fd: fd,
+                            dirname: __newFile.dirname || path.dirname(fd)
+                        }
+                    }).exec(function (err, file) {
+                        if (err) {
+                            receiver__.emit('error', err);
+                            return;
+                        }
+                        var totalBytesRead = 0;
+                        var chunks = bytesCount / options.maxChunkSize;
 
-                        files().getDB().record.create({
-                            '@class': options.filesChunksClusterName,
-                            files_id: file.id,
-                            data: chunkData,
-                            n: current.index
-                        }).then(function (err1, fileChunk) {
-                            next(err1);
+                        var index = 0, chunkRegistry = [];
+                        while (index < chunks) {
+                            chunkRegistry.push({starts: (index * options.maxChunkSize), index: index});
+                            index++;
+                        }
+                        async.eachSeries(chunkRegistry, function (current, next) {
+                            var chunkData = __newFile.read(options.maxChunkSize);
+
+                            files().getDB().record.create({
+                                '@class': options.filesChunksClusterName,
+                                files_id: file.id,
+                                data: chunkData,
+                                n: current.index
+                            }).then(function (err1, fileChunk) {
+                                next(err1);
+                            });
+
+                        }, function (err) {
+                            done(err);
                         });
-
-                    }, function (err) {
-                        done(err);
                     });
                 });
-
 
             };
             return receiver__;
