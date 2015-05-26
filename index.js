@@ -234,7 +234,11 @@ module.exports = function OrientDBStore(globalOpts) {
                         }
                         var refs = [];
                         async.eachSeries(chunkRegistry, function (current, next) {
-                            var chunkData = __newFile.read(options.maxChunkSize);
+                            var bytesToRead = options.maxChunkSize;
+                            if (current.index == (chunkRegistry.length - 1)) {
+                                bytesToRead = bytesCount - (current.index * bytesToRead);
+                            }
+                            var chunkData = __newFile.read(bytesToRead);
 
                             files().getDB().record.create({
                                 '@class': options.filesChunksClusterName,
