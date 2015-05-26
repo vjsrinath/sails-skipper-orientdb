@@ -26,18 +26,17 @@ module.exports = function OrientDBStore(globalOpts) {
     _.defaults(globalOpts, {
         maxChunkSize: 8198, //1MB
         filesCollection: 'files',
-        filesChunksCollection: 'fileschunks',
-        filesChunksClusterName: 'fileschunksbytes'
+        filesChunksClusterName: 'fileschunks'
     });
 
     //var getConnection = _connectionBuilder(globalOpts);
 
     var files = function () {
-            return globalOpts.filesCollection;
-        },
-        filesChunks = function () {
-            return globalOpts.filesChunksCollection;
-        };
+        return globalOpts.filesCollection;
+    }/*,
+     filesChunks = function () {
+     return globalOpts.filesChunksCollection;
+     }*/;
 
     var slPromise;
 
@@ -239,30 +238,15 @@ module.exports = function OrientDBStore(globalOpts) {
 
                             files().getDB().record.create({
                                 '@class': options.filesChunksClusterName,
+                                files_id: file.id,
                                 data: chunkData,
                                 n: current.index
                             }).then(function (fileChunk, err1) {
-                                if (fileChunk) {
-                                    refs.push(fileChunk['@rid']);
-
-                                }
                                 next(err1);
                             });
 
                         }, function (err) {
-                            if (err) {
-                                done(err);
-                            } else {
-                                filesChunks()
-                                    .create({
-                                        files_id: file.id,
-                                        data: refs.map(function (rid) {
-                                            return '#' + rid.cluster + ':' + rid.index;
-                                        })
-                                    }).then(function () {
-                                        done();
-                                    });
-                            }
+                            done(err);
                         });
                     });
                 });
