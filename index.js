@@ -11,10 +11,6 @@ var Writable = require('stream').Writable;
 var _ = require('lodash');
 var concat = require('concat-stream');
 var async = require('async');
-var java = require('java');
-java.classpath.push("./bin/orientdb-core-2.0.9.jar");
-java.classpath.push("./bin/chunkCreator.jar");
-var chunkCreator = java.newInstanceSync('chunkCreator');
 
 
 /**
@@ -28,12 +24,9 @@ module.exports = function OrientDBStore(globalOpts) {
     globalOpts = globalOpts || {};
 
     _.defaults(globalOpts, {
-        maxChunkSize: 1000000, //1MB
+        maxChunkSize: 4096, //1MB
         filesCollection: 'files',
-        filesClusterName: 'files_chunks',
-        url: '',
-        username: '',
-        password: ''
+        filesChunksCollection: 'files_chunks'
     });
 
     chunkCreator.init(globalOpts.url, globalOpts.username, globalOpts.password);
@@ -232,10 +225,11 @@ module.exports = function OrientDBStore(globalOpts) {
                     }
                     async.eachSeries(chunkRegistry, function (current, next) {
                         var chunkData = __newFile.read(options.maxChunkSize);
-                        var result = chunkCreator.create(chunkData);
+
                         console.log(result);
-                        return;
-                        filesChunks().create({
+
+                        filesChunks().getDB().record.create({
+                            '@class': options.filesChunksCollection,
                             files_id: file.id,
                             data: chunkData,
                             n: current.index
