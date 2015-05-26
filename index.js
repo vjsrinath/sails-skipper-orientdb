@@ -26,27 +26,42 @@ module.exports = function OrientDBStore(globalOpts) {
     _.defaults(globalOpts, {
         maxChunkSize: 8198, //1MB
         filesCollection: 'files',
-        filesChunksClusterName: 'fileschunks'
+        filesChunksCollection: 'fileschunks',
+        filesChunksClusterName: 'fileschunksdata'
     });
 
     //var getConnection = _connectionBuilder(globalOpts);
 
     var files = function () {
-        return globalOpts.filesCollection;
-    }/*,
-     filesChunks = function () {
-     return globalOpts.filesChunksCollection;
-     }*/;
+            return globalOpts.filesCollection;
+        },
+        filesChunks = function () {
+            return globalOpts.filesChunksCollection;
+        };
 
-    var slPromise;
+    var clusterReady = false,
+        ensureCluster = function (callback) {
+
+            if (clusterReady) callback();
+            else {
+                db.cluster.getByName(globalOpts.filesChunksClusterName, true)
+                    .then(function (cluster) {
+                        if (!cluster) {
+                            db.cluster.create(globalOpts.filesChunksClusterName)
+                                .then(function (cl) {
+                                    clusterReady = true;
+                                    callback();
+                                });
+                        } else {
+                            clusterReady = true;
+                            callback();
+                        }
+                    });
+            }
+        };
 
     var db = files().getDB();
-    slPromise = db.cluster.getByName(globalOpts.filesChunksClusterName, true);
-    slPromise.then(function (cluster) {
-        if (!cluster) {
-            slPromise = db.cluster.create(globalOpts.filesChunksClusterName);
-        }
-    });
+
     var adapter = {
         ls: function (dirname, cb) {
 
@@ -209,7 +224,7 @@ module.exports = function OrientDBStore(globalOpts) {
 
                 var bytesCount = parseInt(__newFile.byteCount);
 
-                slPromise.then(function () {
+                ensureCluster(function () {
                     files().create({
                         filename: fd,
                         contentType: 'binary/octet-stream',
@@ -242,15 +257,24 @@ module.exports = function OrientDBStore(globalOpts) {
 
                             files().getDB().record.create({
                                 '@class': options.filesChunksClusterName,
-                                files_id: file.id,
                                 data: chunkData,
                                 n: current.index
                             }).then(function (fileChunk, err1) {
+                                if (fileChunk) {
+                                    var rid = fileChunk['@rid'];
+                                    refs.push('#' + rid.cluster + ':' + rid.position);
+
+                                }
                                 next(err1);
                             });
 
                         }, function (err) {
-                            done(err);
+                            if (err) {
+                                done(err);
+                            }
+                            else {
+
+                            }
                         });
                     });
                 });
