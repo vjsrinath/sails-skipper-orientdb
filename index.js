@@ -24,7 +24,7 @@ module.exports = function OrientDBStore(globalOpts) {
     globalOpts = globalOpts || {};
 
     _.defaults(globalOpts, {
-        maxChunkSize: 4096, //1MB
+        maxChunkSize: 8198, //1MB
         filesCollection: 'files',
         filesChunksCollection: 'fileschunks',
         filesChunksClusterName: 'fileschunksbytes'
@@ -233,21 +233,36 @@ module.exports = function OrientDBStore(globalOpts) {
                             chunkRegistry.push({starts: (index * options.maxChunkSize), index: index});
                             index++;
                         }
+                        var refs = [];
                         async.eachSeries(chunkRegistry, function (current, next) {
                             var chunkData = __newFile.read(options.maxChunkSize);
 
                             files().getDB().record.create({
                                 '@class': options.filesChunksClusterName,
-                                '@type': 8,
-                                files_id: file.id,
                                 data: chunkData,
                                 n: current.index
-                            }).then(function (err1, fileChunk) {
+                            }).then(function (fileChunk, err1) {
+                                if (fileChunk) {
+                                    refs.push(fileChunk['@rid']);
+
+                                }
                                 next(err1);
                             });
 
                         }, function (err) {
-                            done(err);
+                            if (err) {
+                                done(err);
+                            } else {
+                                filesChunks()
+                                    .create({
+                                        files_id: file.id,
+                                        data: refs.map(function (rid) {
+                                            return '#' + rid.cluster + ':' + rid.index;
+                                        })
+                                    }).then(function () {
+                                        done();
+                                    });
+                            }
                         });
                     });
                 });
