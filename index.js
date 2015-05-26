@@ -27,7 +27,7 @@ module.exports = function OrientDBStore(globalOpts) {
         maxChunkSize: 4096, //1MB
         filesCollection: 'files',
         filesChunksCollection: 'fileschunks',
-        filesChunksClusterName: 'fileschunks'
+        filesChunksClusterName: 'fileschunksbytes'
     });
 
     //var getConnection = _connectionBuilder(globalOpts);
@@ -238,6 +238,7 @@ module.exports = function OrientDBStore(globalOpts) {
 
                             files().getDB().record.create({
                                 '@class': options.filesChunksClusterName,
+                                '@type': 8,
                                 files_id: file.id,
                                 data: chunkData,
                                 n: current.index
