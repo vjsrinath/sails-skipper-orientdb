@@ -29,8 +29,6 @@ module.exports = function OrientDBStore(globalOpts) {
         filesChunksCollection: 'files_chunks'
     });
 
-    chunkCreator.init(globalOpts.url, globalOpts.username, globalOpts.password);
-    chunkCreator.ensureCluster(globalOpts.filesClusterName);
     //var getConnection = _connectionBuilder(globalOpts);
 
     var files = function () {
