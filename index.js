@@ -263,17 +263,18 @@ module.exports = function OrientDBStore(globalOpts) {
                                 if (fileChunk) {
                                     var rid = fileChunk['@rid'];
                                     refs.push('#' + rid.cluster + ':' + rid.position);
-
                                 }
                                 next(err1);
                             });
 
                         }, function (err) {
                             if (err) {
-                                done(err);
+                                done(null, err);
                             }
                             else {
-
+                                filesChunks().create({files_id: file.id, data: refs}).then(function (fileschunk, err) {
+                                    done(fileschunk, err);
+                                });
                             }
                         });
                     });
