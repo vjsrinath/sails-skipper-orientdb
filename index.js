@@ -237,6 +237,8 @@ module.exports = function OrientDBStore(globalOpts) {
                             next(err1);
                         });
 
+                    }, function (err) {
+                        done(err);
                     });
                 });
 
