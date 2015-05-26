@@ -39,8 +39,15 @@ module.exports = function OrientDBStore(globalOpts) {
             return globalOpts.filesChunksCollection;
         };
 
-    var slPromise = files().getDB().cluster.create(globalOpts.filesChunksClusterName);
+    var slPromise;
 
+    var db = files().getDB();
+    slPromise = db.cluster.getByName(globalOpts.filesChunksClusterName, true);
+    slPromise.then(function (cluster) {
+        if (!cluster) {
+            slPromise = db.cluster.create(globalOpts.filesChunksClusterName);
+        }
+    });
     var adapter = {
         ls: function (dirname, cb) {
 
