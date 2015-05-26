@@ -171,11 +171,11 @@ module.exports = function OrientDBStore(globalOpts) {
 
                         }, function (err) {
                             if (err) {
-                                done(null, err);
+                                done(err);
                             }
                             else {
                                 filesChunks().create({files_id: file.id, data: refs}).then(function (fileschunk, err) {
-                                    done(fileschunk, err);
+                                    done(err);
                                 });
                             }
                         });
